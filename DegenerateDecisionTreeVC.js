@@ -45,12 +45,14 @@ function check_iter(d, N, td) {
     let points = Math.pow(2, d);
     let labels = Math.pow(2, N);
     gettree(d, treedepth, [], new Set());
+    console.log(trees.length);
 
     let nShattered = false;
 
-    let choiceIter = nextChoice(N, 0, points, []);
+    let choiceIter = nextChoiceIter(N, 0, points);
 
     let c = 0;
+    process.stdout._handle.setBlocking(true);
     for (let choice of choiceIter) {
         //console.log(choice);
         c++;
@@ -59,7 +61,7 @@ function check_iter(d, N, td) {
             console.log(c / 10000);
         }
         let shattered = true;
-        for (let l = 0; l < labels; l++) {
+        for (let l = 0; l < labels / 2; l++) {
             if (!treecheck(d, choice, l)) {
                 shattered = false;
                 break;
@@ -69,6 +71,8 @@ function check_iter(d, N, td) {
             nShattered = true;
             console.log("Shattered point: " + choice);
             break;
+        } else {
+            //console.log("noT SHATTERED");
         }
     }
 
@@ -80,13 +84,30 @@ function check_iter(d, N, td) {
     return nShattered;
 }
 
-function* nextChoice(num, min, max, choice) {
-    if (!num) {
-        yield choice;
-    }
-    for (let i = min; i < max; i++) {
-        newChoice = [...choice, i];
-        yield* nextChoice(num - 1, i + 1, max, newChoice);
+function* nextChoiceIter(num, min, max) {
+    let choice = [];
+    console.log("Max" + max);
+    let hasMore = true;
+    let i = min;
+    while (hasMore) {
+        //console.log("length" + choice.length);
+        //console.log("i:" + i);
+        if (choice.length < num) {
+            choice.push(i);
+            i++;
+        } else {
+            //console.log("yield" + choice);
+            yield choice;
+            choice.pop();
+        }
+        while (i > max) {
+            //console.log(i);
+            if (choice.length === 0) {
+                hasMore = false;
+            }
+            i = choice.pop();
+            i++;
+        }
     }
 }
 
@@ -102,7 +123,7 @@ function nextNum(num, min, max, choice) {
 }
 
 function treecheck(dimension, choice, label) {
-    //console.log("checking " + choice + " L:" + label);
+    //console.log("checking " + dimension + " C:" + JSON.stringify(choice) + " L:" + label);
     let l = label.toString(2).padStart(choice.length, '0');
     //console.log(l);
     let labels = {};
@@ -186,6 +207,7 @@ let InputDimension = args[1];
 let VcToCheck = args[2];
 console.log("Start time:" + new Date());
 //check(4, 7, 4); // Dimension, VC, Tree Node Count
+//check(InputDimension, VcToCheck, TreeInternalNode);
 check_iter(InputDimension, VcToCheck, TreeInternalNode);
 console.log("End time:" + new Date());
 
